@@ -832,6 +832,26 @@ var ResizeObserverEntry = function(target, rectInit) {
   defineConfigurable(this, { target: target, contentRect: contentRect });
 };
 
+/**
+ * Check is the target is an Element by duck typing.
+ * https://stackoverflow.com/questions/384286/javascript-isdom-how-do-you-check-if-a-javascript-object-is-a-dom-object
+ * http://tobyho.com/2011/01/28/checking-types-in-javascript/
+ *
+ * @param {Object} target
+ * @returns {Boolean}
+ */
+
+var isElement = (function (target) {
+    // Call the Object.prototype.toString method to check for presence of 'Element' string
+    // This method reliably differentiates between native types
+
+    var regex = /element/gi;
+    var hasElementStr = regex.test(Object.prototype.toString.call(target));
+
+    return typeof HTMLElement === 'object' ? target instanceof HTMLElement : //DOM2
+    target && hasElementStr && typeof target === 'object' && target !== null && target.nodeType === 1 && typeof target.nodeName === 'string';
+});
+
 var ResizeObserverSPI = function(callback, controller, callbackCtx) {
     this.activeObservations_ = [];
     this.observations_ = new MapShim();
@@ -883,7 +903,7 @@ ResizeObserverSPI.prototype.observe = function (target) {
         return;
     }
 
-    if (!(target instanceof getWindowOf(target).Element)) {
+    if (!(target instanceof getWindowOf(target).Element || isElement(target))) {
         throw new TypeError('parameter 1 is not of type "Element".');
     }
 
